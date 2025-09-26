@@ -480,31 +480,44 @@ class TonieboxMiniMediaCardEditor extends HTMLElement {
         el.addEventListener("closed", onChange); // ha-select
       });
   }
-
+  _deepClone(o) {
+    try {
+      return JSON.parse(JSON.stringify(o));
+    } catch {
+      return {};
+    }
+  }
   _ensureShape(cfg) {
-    const c = cfg || {};
-    c.name = c.name || "Toniebox";
-    c.entities = c.entities || {};
-    c.entities.title_entity = c.entities.title_entity || "";
-    c.entities.cover_entity = c.entities.cover_entity || "";
-    c.entities.playback_entity = c.entities.playback_entity || "";
-    c.entities.battery_entity = c.entities.battery_entity || "";
-    c.entities.charging_entity = c.entities.charging_entity || "";
-    c.entities.rssi_entity = c.entities.rssi_entity || "";
-    c.control = c.control || { mode: "media_player" };
-    if (c.control.mode === "media_player") {
-      c.control.media_player = c.control.media_player || "";
-    }
-    if (c.control.mode === "mqtt") {
-      c.control.mqtt = c.control.mqtt || {};
-      c.control.mqtt.command_topic = c.control.mqtt.command_topic || "";
-      c.control.mqtt.play_payload = c.control.mqtt.play_payload || "PLAY";
-      c.control.mqtt.pause_payload = c.control.mqtt.pause_payload || "PAUSE";
-      c.control.mqtt.next_payload = c.control.mqtt.next_payload || "NEXT";
-      c.control.mqtt.previous_payload =
-        c.control.mqtt.previous_payload || "PREVIOUS";
-    }
-    return c;
+    const c = this._deepClone(cfg || {});
+    const mode = c.control?.mode === "mqtt" ? "mqtt" : "media_player";
+    return {
+      name: c.name ?? "Toniebox",
+      control:
+        mode === "media_player"
+          ? { mode, media_player: c.control?.media_player ?? "" }
+          : {
+              mode,
+              mqtt: {
+                command_topic: c.control?.mqtt?.command_topic ?? "",
+                play_payload: c.control?.mqtt?.play_payload ?? "PLAY",
+                pause_payload: c.control?.mqtt?.pause_payload ?? "PAUSE",
+                next_payload: c.control?.mqtt?.next_payload ?? "NEXT",
+                previous_payload:
+                  c.control?.mqtt?.previous_payload ?? "PREVIOUS",
+              },
+            },
+      entities: {
+        title_entity: c.entities?.title_entity ?? "",
+        cover_entity: c.entities?.cover_entity ?? "",
+        playback_entity: c.entities?.playback_entity ?? "",
+        battery_entity: c.entities?.battery_entity ?? "",
+        charging_entity: c.entities?.charging_entity ?? "",
+        rssi_entity: c.entities?.rssi_entity ?? "",
+      },
+      show_battery: c.show_battery !== false,
+      show_rssi: !!c.show_rssi,
+      tap_action: c.tap_action ?? { action: "more-info" },
+    };
   }
 }
 
